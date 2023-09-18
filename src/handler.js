@@ -2,34 +2,38 @@ const VoiceResponse = require("twilio").twiml.VoiceResponse;
 const AccessToken = require("twilio").jwt.AccessToken;
 const VoiceGrant = AccessToken.VoiceGrant;
 
-const nameGenerator = require("../name_generator");
 const config = require("../config");
 
-var identity;
 
-exports.tokenGenerator = function tokenGenerator() {
-  identity = nameGenerator();
+exports.tokenGenerator = function tokenGenerator(callerId) {
 
   const accessToken = new AccessToken(
     config.accountSid,
     config.apiKey,
     config.apiSecret
   );
-  accessToken.identity = identity;
+  const pushCredentialSid = 'CR1cb87813a1ef89395d491e413bf4e27c'
+  accessToken.identity = callerId;
+  console.log(accessToken);
   const grant = new VoiceGrant({
     outgoingApplicationSid: config.twimlAppSid,
     incomingAllow: true,
+    pushCredentialSid: pushCredentialSid
   });
   accessToken.addGrant(grant);
 
   // Include identity and token in a JSON response
   return {
-    identity: identity,
+    identity: callerId,
     token: accessToken.toJwt(),
   };
 };
 
 exports.voiceResponse = function voiceResponse(requestBody) {
+  // const identity = requestBody.To;
+  const identity = "0970797919";
+  console.log(requestBody)
+  console.log(identity)
   const toNumberOrClientName = requestBody.To;
   const callerId = config.callerId;
   let twiml = new VoiceResponse();

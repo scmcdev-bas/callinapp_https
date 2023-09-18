@@ -1,124 +1,324 @@
-﻿@import url(https://fonts.googleapis.com/css?family=Share+Tech+Mono);
-
-body,
-p {
+﻿@import url("https://fonts.googleapis.com/css?family=Roboto:400,500&display=swap");
+* {
+  font-family: "Athiti", sans-serif;
+  font-family: "Noto Sans Thai", sans-serif;
+  font-family: "Prompt", sans-serif;
+}
+body {
   padding: 0;
-  margin: auto;
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  font-family: "Roboto", sans-serif;
+  background-color: #ffffff;
 }
 
 h1 {
   text-align: center;
+  margin-top: 40px;
+  color: #333;
 }
 
 h2 {
   margin-top: 0;
-  border-bottom: 1px solid black;
+  border-bottom: 2px solid #333;
+  padding-bottom: 5px;
+  color: #333;
+}
+
+p {
+  margin: 0;
 }
 
 button {
   margin-bottom: 10px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  background-color: #007bff;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #0056b3;
 }
 
 label {
-  text-align: left;
-  font-size: 1.25em;
-  color: #777776;
+  font-size: 1.2em;
+  color: #777;
   display: block;
 }
 
 header {
   text-align: center;
+  padding: 20px 0;
+  background-color: #007bff;
+  color: #fff;
 }
 
 main {
-  padding: 3em;
-  max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.left-column,
-.center-column,
-.right-column {
-  width: 30%;
-  min-width: 16em;
-  margin: 0 1.5em;
-  text-align: center;
+  padding: 2em;
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
 }
 
 /* Left Column */
-#client-name {
+.left-column {
   text-align: left;
-  margin-bottom: 1em;
-  font-family: "Helvetica Light", Helvetica, sans-serif;
-  font-size: 1.25em;
-  color: #777776;
+}
+
+#client-name {
+  font-size: 1.2em;
+  color: #555;
 }
 
 select {
-  width: 300px;
-  height: 60px;
-  margin-bottom: 10px;
+  width: 100%;
+  height: 40px;
 }
 
 /* Center Column */
 input {
-  font-family: Helvetica-LightOblique, Helvetica, sans-serif;
-  font-style: oblique;
   font-size: 1em;
   width: 100%;
-  height: 2.5em;
-  padding: 0;
-  display: block;
-  margin: 10px 0;
+  height: 40px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
 
 div#volume-indicators {
-  padding: 10px;
   margin-top: 20px;
-  width: 500px;
-  text-align: left;
 }
 
 div#volume-indicators > div {
-  display: block;
-  height: 20px;
-  width: 0;
+  background-color: #007bff;
+  height: 10px;
 }
 
 /* Right Column */
 .right-column {
-  padding: 0 1.5em;
+  text-align: left;
 }
 
 #log {
-  text-align: left;
-  border: 1px solid #686865;
+  border: 1px solid #ccc;
   padding: 10px;
-  height: 9.5em;
+  height: 250px;
   overflow-y: scroll;
 }
 
 .log-entry {
-  color: #686865;
-  font-family: "Share Tech Mono", "Courier New", Courier, fixed-width;
-  font-size: 1.25em;
-  line-height: 1.25em;
-  margin-left: 1em;
-  text-indent: -1.25em;
-  width: 90%;
+  font-family: "Share Tech Mono", monospace;
+  font-size: 1.1em;
+  line-height: 1.5;
+  color: #333;
 }
 
 /* Other Styles */
 .hide {
-  position: absolute !important;
-  top: -9999px !important;
-  left: -9999px !important;
+  display: none;
 }
 
 button:disabled {
+  background-color: #ccc;
   cursor: not-allowed;
+}
+
+.toggle-icon {
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+.btn-custom {
+  font-size: 50px;
+  font-weight: bold;
+  background-color: #f3f3f3;
+  color: #333;
+  border: none;
+  width: 200px; 
+  height: 200px;
+  border-radius: 50%; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-custom:hover {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.btn-custom-call {
+  font-size: 30px;
+  font-weight: bold;
+  padding: 70px 70px;
+  color: #ffffff;
+}
+
+.phone-input {
+  background-color: transparent;
+  border: none;
+  border-bottom: 2px solid #f7f7f7;
+  outline: none;
+  width: 100%;
+  font-size: 5rem;
+  text-align: center;
+  height: 100px;
+}
+
+/* Styling for the pop-up */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9999; /* Ensures the pop-up is on top of other elements */
+}
+
+.modal-content {
+  background-color: #fff;
+  padding: 20px;
+  width: 80%;
+  min-height: 20%;
+  box-sizing: border-box;
+  max-width: 100%;
+  max-height: 100%;
+  margin: 0;
+  overflow: auto;
+  border-radius: 0;
+  
+  /* Center the content horizontally and vertically */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+.close {
+  float: right;
+  font-size: 70px;
+  font-weight: bold;
+  cursor: pointer;
+  width: 10%;
+}
+
+.close:hover {
+  color: #f00;
+}
+.q_header {
+  font-size: 3rem;
+}
+.q_select {
+  font-size: 2rem;
+}
+.footer {
+  background-color: #344f83;
+}
+.footer.telnumber {
+  color: #fff;
+  font-size: 3.5rem;
+}
+.footer.footermenu {
+  color: #fff;
+  font-size: 2.2rem;
+}
+.footer.hr {
+  background-color: #ffffff;
+}
+.banner-header {
+  font-size: 2.5rem;
+}
+.banner-word {
+  font-size: 2.2rem;
+}
+/* Popup styles */
+.popup-box {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+}
+
+.popup-box-content {
+  background-color: #fff;
+  width: 80%;
+  margin: 20% auto;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+  position: relative;
+  font-size:  2.9rem;
+  text-align: center;
+}
+.modal_incomingcall {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9999; /* Ensures the pop-up is on top of other elements */
+}
+
+.modal_incomingcall-content {
+  background-color: #fff;
+  padding: 20px;
+  width: 80%;
+  min-height: 25%;
+  box-sizing: border-box;
+  max-width: 100%;
+  max-height: 100%;
+  margin: 0;
+  overflow: auto;
+  border-radius: 0;
+  
+  /* Center the content horizontally and vertically */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.modal_incomingcall-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+
+/* Media Queries for Smartphones */
+@media only screen and (max-width: 600px) {
+  main {
+    padding: 1em;
+  }
+
+  .btn-custom {
+    font-size: 16px;
+    padding: 12px 15px;
+  }
+
+  .btn-custom-call {
+    font-size: 16px;
+    padding: 12px 15px;
+  }
 }

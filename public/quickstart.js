@@ -1,15 +1,12 @@
-﻿$(function () {
+﻿
+$(function () {
+
   const speakerDevices = document.getElementById("speaker-devices");
   const ringtoneDevices = document.getElementById("ringtone-devices");
-  const outputVolumeBar = document.getElementById("output-volume");
-  const inputVolumeBar = document.getElementById("input-volume");
-  const volumeIndicators = document.getElementById("volume-indicators");
-  const callButton = document.getElementById("button-call");
-  const outgoingCallHangupButton = document.getElementById("button-hangup-outgoing");
-  const callControlsDiv = document.getElementById("call-controls");
-  const audioSelectionDiv = document.getElementById("output-selection");
-  const getAudioDevicesButton = document.getElementById("get-devices");
-  const logDiv = document.getElementById("log");
+  const custumerId = document.getElementById("custumerId");
+  const outgoingCallHangupButton = document.getElementById(
+    "button-hangup-outgoing"
+  );
   const incomingCallDiv = document.getElementById("incoming-call");
   const incomingCallHangupButton = document.getElementById(
     "button-hangup-incoming"
@@ -20,38 +17,96 @@
   const incomingCallRejectButton = document.getElementById(
     "button-reject-incoming"
   );
-  const phoneNumberInput = document.getElementById("phone-number");
   const incomingPhoneNumberEl = document.getElementById("incoming-number");
-  const startupButton = document.getElementById("startup-button");
+  const urlParams = new URLSearchParams(window.location.search);
+
+  const numpad = document.getElementById("numpad");
+  const incomingCallAcceptControler = document.getElementById(
+    "incomingCallAcceptControler"
+  );
+  const buttoncallcontainner = document.getElementById("buttoncallcontainner");
+  const buttonincomingcallcontainner = document.getElementById(
+    "buttonincomingcallcontainner"
+  );
+  const popupButton = document.getElementById("popupButton");
+  const popup = document.getElementById("popup");
+  const closeButton = document.getElementById("closeButton");
+  const btnStartCall = document.getElementById("startcall");
+  const btnClosePopup = document.getElementById("close-errorpopup");
+  const cancelBtn = document.getElementById("cancelBtn");
+  const errorMessage = document.getElementById("error");
+  const logoutBtn = document.getElementById("logout");
+  const customerIdLabel = document.getElementById("custumerId");
+  let callStartTime = null;
+  let timerInterval = null;
+  startupClient();
+  btnClosePopup.addEventListener("click", (e) => {
+    closePopup();
+  });
+  btnStartCall.addEventListener("click", (e) => {
+    startcall(e);
+  });
+  popupButton.addEventListener("click", (e) => {
+    popup.style.display = "block";
+    errorMessage.classList.add("hide");
+  });
+
+  closeButton.addEventListener("click", () => {
+    popup.style.display = "none";
+    outgoingCallHangupButton.click();
+    errorMessage.classList.add("hide");
+  });
+  cancelBtn.addEventListener("click", () => {
+    popup.style.display = "none";
+    outgoingCallHangupButton.click();
+  });
+  // Close the popup when clicking outside of it
+  window.addEventListener("click", (event) => {
+    if (event.target === popup) {
+      popup.style.display = "none";
+      outgoingCallHangupButton.click();
+    }
+  });
+  logoutBtn.addEventListener("click", () => {
+    localStorage.removeItem("id");
+    window.location.href = "/login";
+  });
+  // Define the DTMF button elements in an array
+
+  // Decode the Base64 encoded value
+  try {
+    phoneNumberLabel.value = formattedTel;
+    console.log(formattedTel);
+  } catch (error) {
+    console.log(error);
+  }
 
   let device;
   let token;
 
+  if (localStorage.getItem("id") === null) {
+    window.location.href = "/login";
+  }
   // Event Listeners
 
-  callButton.onclick = (e) => {
-    e.preventDefault();
-    makeOutgoingCall();
-  };
-  getAudioDevicesButton.onclick = getAudioDevices;
+  getAudioDevices();
   speakerDevices.addEventListener("change", updateOutputDevice);
   ringtoneDevices.addEventListener("change", updateRingtoneDevice);
-  
 
   // SETUP STEP 1:
   // Browser client should be started after a user gesture
   // to avoid errors in the browser console re: AudioContext
-  startupButton.addEventListener("click", startupClient);
-
   // SETUP STEP 2: Request an Access Token
   async function startupClient() {
     log("Requesting Access Token...");
+    var phonenumber = localStorage.getItem("id");
+    //var phonenumber = document.getElementById("clientPhoneNumber").value;
 
     try {
-      const data = await $.getJSON("/token");
+      const data = await $.getJSON(`/token?callerId=${phonenumber}`);
       log("Got a token.");
       token = data.token;
-      setClientNameUI(data.identity);
+      console.log(token);
       intitializeDevice();
     } catch (err) {
       console.log(err);
@@ -62,10 +117,9 @@
   // SETUP STEP 3:
   // Instantiate a new Twilio.Device
   function intitializeDevice() {
-    logDiv.classList.remove("hide");
     log("Initializing device");
     device = new Twilio.Device(token, {
-      logLevel:1,
+      logLevel: 1,
       // Set Opus as our preferred codec. Opus generally performs better, requiring less bandwidth and
       // providing better audio quality in restrained network conditions.
       codecPreferences: ["opus", "pcmu"],
@@ -82,7 +136,6 @@
   function addDeviceListeners(device) {
     device.on("registered", function () {
       log("Twilio.Device Ready to make and receive calls!");
-      callControlsDiv.classList.remove("hide");
     });
 
     device.on("error", function (error) {
@@ -95,19 +148,59 @@
 
     // Show audio selection UI if it is supported by the browser.
     if (device.audio.isOutputSelectionSupported) {
-      audioSelectionDiv.classList.remove("hide");
     }
   }
 
   // MAKE AN OUTGOING CALL
+  function updateCallTimer() {
+    if (callStartTime) {
+      const currentTime = new Date();
+      const elapsedTime = Math.floor((currentTime - callStartTime) / 1000); // in seconds
 
+      const minutes = Math.floor(elapsedTime / 60);
+      const seconds = elapsedTime % 60;
+
+      const formattedTime = `${String(minutes).padStart(2, "0")}:${String(
+        seconds
+      ).padStart(2, "0")}`;
+      document.getElementById("call-timer").textContent = formattedTime;
+    }
+  }
+  function updateCallTimerIncomingCall() {
+    if (callStartTime) {
+      const currentTime = new Date();
+      const elapsedTime = Math.floor((currentTime - callStartTime) / 1000); // in seconds
+
+      const minutes = Math.floor(elapsedTime / 60);
+      const seconds = elapsedTime % 60;
+
+      const formattedTime = `${String(minutes).padStart(2, "0")}:${String(
+        seconds
+      ).padStart(2, "0")}`;
+      document.getElementById("call-timer-incomingcall").textContent =
+        formattedTime;
+    }
+  }
   async function makeOutgoingCall() {
-    var params = {
-      // get the phone number to call from the DOM
-      To: phoneNumberInput.value,
+    try {
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject);
+      });
+
+      var lat = position.coords.latitude;
+      var lng = position.coords.longitude;
+    } catch {
+      lat = "13.7449955";
+      lng = "100.5413548";
+    }
+    const params = {
+      To: "",
+      lat: lat,
+      lng: lng,
     };
 
     if (device) {
+      // Assuming 'device' is defined somewhere
       log(`Attempting to call ${params.To} ...`);
 
       // Twilio.Device.connect() returns a Call object
@@ -123,7 +216,6 @@
         log("Hanging up ...");
         call.disconnect();
       };
-
     } else {
       log("Unable to make call.");
     }
@@ -131,17 +223,29 @@
 
   function updateUIAcceptedOutgoingCall(call) {
     log("Call in progress ...");
-    callButton.disabled = true;
+    customerIdLabel.textContent = localStorage.getItem("id");
+    callStartTime = new Date();
+    timerInterval = setInterval(updateCallTimer, 1000);
     outgoingCallHangupButton.classList.remove("hide");
-    volumeIndicators.classList.remove("hide");
-    bindVolumeIndicators(call);
+    numpad.classList.remove("hide");
+    buttoncallcontainner.classList.add("hide");
   }
-
+  async function startcall(e) {
+    e.preventDefault();
+    makeOutgoingCall();
+    errorMessage.classList.add("hide");
+  }
   function updateUIDisconnectedOutgoingCall() {
     log("Call disconnected.");
-    callButton.disabled = false;
+    document.getElementById("call-timer").textContent = "Starting call...";
+    callStartTime = null; // Reset the call timer
+    clearInterval(timerInterval); // Stop the timer interval
+    closeButton.click();
     outgoingCallHangupButton.classList.add("hide");
-    volumeIndicators.classList.add("hide");
+    numpad.classList.add("hide");
+    buttoncallcontainner.classList.remove("hide");
+
+    // Reset the timer display
   }
 
   // HANDLE INCOMING CALL
@@ -151,7 +255,6 @@
 
     //show incoming call div and incoming phone number
     incomingCallDiv.classList.remove("hide");
-    incomingPhoneNumberEl.innerHTML = call.parameters.From;
 
     //add event listeners for Accept, Reject, and Hangup buttons
     incomingCallAcceptButton.onclick = () => {
@@ -164,6 +267,7 @@
 
     incomingCallHangupButton.onclick = () => {
       hangupIncomingCall(call);
+      pop;
     };
 
     // add event listener to call object
@@ -172,60 +276,9 @@
     call.on("reject", handleDisconnectedIncomingCall);
   }
 
-  // ACCEPT INCOMING CALL
-
-  function acceptIncomingCall(call) {
-    call.accept();
-
-    //update UI
-    log("Accepted incoming call.");
-    incomingCallAcceptButton.classList.add("hide");
-    incomingCallRejectButton.classList.add("hide");
-    incomingCallHangupButton.classList.remove("hide");
-  }
-
-  // REJECT INCOMING CALL
-
-  function rejectIncomingCall(call) {
-    call.reject();
-    log("Rejected incoming call");
-    resetIncomingCallUI();
-  }
-
-  // HANG UP INCOMING CALL
-
-  function hangupIncomingCall(call) {
-    call.disconnect();
-    log("Hanging up incoming call");
-    resetIncomingCallUI();
-  }
-
-  // HANDLE CANCELLED INCOMING CALL
-
-  function handleDisconnectedIncomingCall() {
-    log("Incoming call ended.");
-    resetIncomingCallUI();
-  }
-
-  // MISC USER INTERFACE
-
   // Activity log
   function log(message) {
-    logDiv.innerHTML += `<p class="log-entry">&gt;&nbsp; ${message} </p>`;
-    logDiv.scrollTop = logDiv.scrollHeight;
-  }
-
-  function setClientNameUI(clientName) {
-    var div = document.getElementById("client-name");
-    div.innerHTML = `Your client name: <strong>${clientName}</strong>`;
-  }
-
-  function resetIncomingCallUI() {
-    incomingPhoneNumberEl.innerHTML = "";
-    incomingCallAcceptButton.classList.remove("hide");
-    incomingCallRejectButton.classList.remove("hide");
-    incomingCallHangupButton.classList.add("hide");
-    incomingCallDiv.classList.add("hide");
+    console.log(message);
   }
 
   // AUDIO CONTROLS
@@ -258,30 +311,6 @@
     device.audio.ringtoneDevices.set(selectedDevices);
   }
 
-  function bindVolumeIndicators(call) {
-    call.on("volume", function (inputVolume, outputVolume) {
-      var inputColor = "red";
-      if (inputVolume < 0.5) {
-        inputColor = "green";
-      } else if (inputVolume < 0.75) {
-        inputColor = "yellow";
-      }
-
-      inputVolumeBar.style.width = Math.floor(inputVolume * 300) + "px";
-      inputVolumeBar.style.background = inputColor;
-
-      var outputColor = "red";
-      if (outputVolume < 0.5) {
-        outputColor = "green";
-      } else if (outputVolume < 0.75) {
-        outputColor = "yellow";
-      }
-
-      outputVolumeBar.style.width = Math.floor(outputVolume * 300) + "px";
-      outputVolumeBar.style.background = outputColor;
-    });
-  }
-
   // Update the available ringtone and speaker devices
   function updateDevices(selectEl, selectedDevices) {
     selectEl.innerHTML = "";
@@ -302,5 +331,79 @@
       }
       selectEl.appendChild(option);
     });
+  }
+
+  function closePopup() {
+    const popup = document.getElementById("error-popup");
+    popup.style.display = "none";
+  }
+
+  function handleIncomingCall(call) {
+    log(`Incoming call from ${call.parameters.From}`);
+
+    //show incoming call div and incoming phone number
+    incomingCallDiv.classList.remove("hide");
+    // incomingPhoneNumberEl.innerHTML = call.parameters.From;
+
+    //add event listeners for Accept, Reject, and Hangup buttons
+    incomingCallAcceptButton.onclick = () => {
+      acceptIncomingCall(call);
+    };
+
+    incomingCallRejectButton.onclick = () => {
+      rejectIncomingCall(call);
+    };
+
+    incomingCallHangupButton.onclick = () => {
+      hangupIncomingCall(call);
+    };
+
+    // add event listener to call object
+    call.on("cancel", handleDisconnectedIncomingCall);
+    call.on("disconnect", handleDisconnectedIncomingCall);
+    call.on("reject", handleDisconnectedIncomingCall);
+  }
+
+  // ACCEPT INCOMING CALL
+
+  function acceptIncomingCall(call) {
+    call.accept();
+
+    //update UI
+    log("Accepted incoming call.");
+    buttonincomingcallcontainner.classList.add("hide");
+    incomingCallAcceptControler.classList.remove("hide");
+    incomingCallHangupButton.classList.remove("hide");
+    callStartTime = new Date();
+    timerInterval = setInterval(updateCallTimerIncomingCall, 1000);
+  }
+
+  // REJECT INCOMING CALL
+
+  function rejectIncomingCall(call) {
+    call.reject();
+    log("Rejected incoming call");
+    resetIncomingCallUI();
+  }
+
+  // HANG UP INCOMING CALL
+
+  function hangupIncomingCall(call) {
+    call.disconnect();
+    log("Hanging up incoming call");
+    resetIncomingCallUI();
+  }
+
+  // HANDLE CANCELLED INCOMING CALL
+
+  function handleDisconnectedIncomingCall() {
+    log("Incoming call ended.");
+    resetIncomingCallUI();
+  }
+  function resetIncomingCallUI() {
+    buttonincomingcallcontainner.classList.remove("hide");
+    incomingCallAcceptControler.classList.add("hide");
+    incomingCallHangupButton.classList.add("hide");
+    incomingCallDiv.classList.add("hide");
   }
 });

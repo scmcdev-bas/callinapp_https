@@ -4,9 +4,10 @@ const { tokenGenerator, voiceResponse } = require("./handler");
 const router = new Router();
 
 router.get("/token", (req, res) => {
-  res.send(tokenGenerator());
+  const callerId = req.query.callerId;
+    console.log(callerId);
+  res.send(tokenGenerator(callerId));
 });
-
 router.post("/voice", (req, res) => {
   res.set("Content-Type", "text/xml");
   res.send(voiceResponse(req.body));

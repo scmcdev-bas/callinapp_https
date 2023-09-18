@@ -1,64 +1,515 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Twilio Voice JavaScript SDK Quickstart</title>
-    <link rel="stylesheet" href="site.css" />
-  </head>
-  <body>
-    <header>
-      <h1>Twilio Voice JavaScript SDK Quickstart</h1>
-      <button id="startup-button">Start up the Device</button>
-    </header>
-    <main id="controls">
-      <section class="left-column" id="info">
-        <h2>Your Device Info</h2>
-        <div id="client-name"></div>
-        <div id="output-selection" class="hide">
-          <label>Ringtone Devices</label>
-          <select id="ringtone-devices" multiple></select>
-          <label>Speaker Devices</label>
-          <select id="speaker-devices" multiple></select
-          ><br />
-          <button id="get-devices">Seeing "Unknown" devices?</button>
-        </div>
-      </section>
-      <section class="center-column">
-        <h2 class="instructions">Make a Call</h2>
-        <div id="call-controls" class="hide">
-          <form>
-            <label for="phone-number"
-              >Enter a phone number or client name</label
-            >
-            <input id="phone-number" type="text" placeholder="+15552221234" />
-            <button id="button-call" type="submit">Call</button>
-          </form>
-          <button id="button-hangup-outgoing" class="hide">Hang Up</button>
-          <div id="incoming-call" class="hide">
-            <h2>Incoming Call Controls</h2>
-            <p class="instructions">
-              Incoming Call from <span id="incoming-number"></span>
-            </p>
-            <button id="button-accept-incoming">Accept</button>
-            <button id="button-reject-incoming">Reject</button>
-            <button id="button-hangup-incoming" class="hide">Hangup</button>
-          </div>
-          <div id="volume-indicators" class="hide">
-            <label>Mic Volume</label>
-            <div id="input-volume"></div>
-            <br /><br />
-            <label>Speaker Volume</label>
-            <div id="output-volume"></div>
-          </div>
-        </div>
-      </section>
-      <section class="right-column">
-        <h2>Event Log</h2>
-        <div class="hide" id="log"></div>
-      </section>
-    </main>
+    <title>SCMC call in app DEMO</title>
+    <link
+      rel="icon"
+      href="https://www.scmc.co.th/wp-content/uploads/2023/07/cropped-scmc_favicon_512x512-1-32x32.png"
+      type="image/icon type"
+    />
 
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Athiti:wght@500&family=Noto+Sans+Thai:wght@300&family=Prompt:wght@300&display=swap"
+      rel="stylesheet"
+    />
+    <link rel=”stylesheet”
+    href=”https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css”/>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link rel="stylesheet" href="site.css" />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+  </head>
+  <div id="error-popup" class="popup-box">
+    <div class="popup-box-content">
+      <p id="error-message">กรุณาใส่หมายเลขโทรศัพท์ให้ครบ</p>
+      <div
+        class="btn btn-success"
+        id="close-errorpopup"
+        style="font-size: 2.5rem"
+      >
+        ตกลง
+      </div>
+    </div>
+  </div>
+  <body>
+    <div class="row w-100 d-flex p-4 m-0" style="background-color: #344f83">
+      <div class="col-2">
+        <div class="p-2 mt-2">
+          <svg
+            width="50"
+            height="50"
+            viewBox="0 0 35 35"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M2.1 6.3C1.84756 6.29643 1.61275 6.42906 1.48548 6.64711C1.35821 6.86516 1.35821 7.13484 1.48548 7.35288C1.61275 7.57093 1.84756 7.70356 2.1 7.69999H32.9C33.1525 7.70356 33.3873 7.57092 33.5145 7.35288C33.6418 7.13483 33.6418 6.86515 33.5145 6.64711C33.3873 6.42906 33.1525 6.29643 32.9 6.3H2.1ZM2.1 16.8C1.84756 16.7964 1.61275 16.9291 1.48548 17.1471C1.35821 17.3652 1.35821 17.6348 1.48548 17.8529C1.61275 18.0709 1.84756 18.2036 2.1 18.2H32.9C33.1525 18.2036 33.3873 18.0709 33.5145 17.8529C33.6418 17.6348 33.6418 17.3651 33.5145 17.1471C33.3873 16.9291 33.1525 16.7964 32.9 16.8H2.1ZM2.1 27.3C1.84756 27.2964 1.61275 27.4291 1.48548 27.6471C1.35821 27.8652 1.35821 28.1348 1.48548 28.3529C1.61275 28.5709 1.84756 28.7036 2.1 28.7H32.9C33.1525 28.7036 33.3873 28.5709 33.5145 28.3529C33.6418 28.1348 33.6418 27.8651 33.5145 27.6471C33.3873 27.4291 33.1525 27.2964 32.9 27.3H2.1Z"
+              fill="white"
+            />
+          </svg>
+        </div>
+      </div>
+      <div class="col-3">
+        <img src="./img/Logo.png" alt="Logo_SCMC" />
+      </div>
+      <div class="col-4"></div>
+      <div class="col-3 d-flex align-items-center">
+        <div
+          id="logout"
+          class="btn p-3 rounded-pill fs-4 m-auto py-auto"
+          style="background-color: #f36f39; color: #fff"
+        >
+          ออกจากระบบ
+        </div>
+      </div>
+    </div>
+    <div class="row w-100 m-0">
+      <img src="./img/banner1.png" alt="Banner1" class="w-100 m-0 p-0" />
+    </div>
+    <div class="banner-header my-5 text-center fw-bold">ประกันทั้งหมด</div>
+    <div class="row w-100 p-0 m-0">
+      <div class="col-4">
+        <img class="w-100" src="./img/banner2.png" alt="" />
+      </div>
+      <div class="col-4">
+        <img class="w-100" src="./img/banner3.png" alt="" />
+      </div>
+      <div class="col-4">
+        <img class="w-100" src="./img/banner4.png" alt="" />
+      </div>
+    </div>
+    <div class="banner-header my-5 text-center fw-bold">บริการอื่น ๆ</div>
+    <div class="row w-100 m-0 p-0">
+      <div class="col-6">
+        <div class="card w-100 rounded-3">
+          <img src="./img/banner5.png" class="card-img-top" alt="..." />
+          <div class="card-body">
+            <h5 class="card-title banner-word">ปรึกษาและวางแผน</h5>
+            <p class="card-text fs-2">
+              Some quick example text to build on the card title and make up the
+              bulk of the card's content.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="card w-100 rounded-3">
+          <img src="./img/banner6.png" class="card-img-top" alt="..." />
+          <div class="card-body">
+            <h5 class="card-title banner-word">คำนวนเบี้ยประกัน</h5>
+            <p class="card-text fs-2">
+              Some quick example text to build on the card title and make up the
+              bulk of the card's content.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="w-100 mt-5">
+      <img src="./img/app.png" alt="" class="w-100" />
+    </div>
+    <div class="px-3 pt-5 bg-light">
+      <div class="q_header">คำถามที่พบบ่อย</div>
+      <hr />
+      <div class="d-flex justify-content-between">
+        <div class="q_select">
+          Q: เริ่มต้นทำประกับชีวิตได้ตั้งแต่อายุเท่าไหร่
+        </div>
+        <div class="mt-2 me-3">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="30"
+            height="30"
+            fill="currentColor"
+            class="bi bi-chevron-compact-down"
+            viewBox="0 0 16 16"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M1.553 6.776a.5.5 0 0 1 .67-.223L8 9.44l5.776-2.888a.5.5 0 1 1 .448.894l-6 3a.5.5 0 0 1-.448 0l-6-3a.5.5 0 0 1-.223-.67z"
+            />
+          </svg>
+        </div>
+      </div>
+      <hr />
+      <div class="d-flex justify-content-between">
+        <div class="q_select">Q: ข้อดีและข้อเสัยของประกันชีวิต</div>
+
+        <div class="mt-2 me-3">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="30"
+            height="30"
+            fill="currentColor"
+            class="bi bi-chevron-compact-down"
+            viewBox="0 0 16 16"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M1.553 6.776a.5.5 0 0 1 .67-.223L8 9.44l5.776-2.888a.5.5 0 1 1 .448.894l-6 3a.5.5 0 0 1-.448 0l-6-3a.5.5 0 0 1-.223-.67z"
+            />
+          </svg>
+        </div>
+      </div>
+      <hr />
+      <div class="d-flex justify-content-between">
+        <div class="q_select">Q: สิธิพิเศษที่ได้รับเมื่อทำประกันชีวิต</div>
+
+        <div class="mt-2 me-3">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="30"
+            height="30"
+            fill="currentColor"
+            class="bi bi-chevron-compact-down"
+            viewBox="0 0 16 16"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M1.553 6.776a.5.5 0 0 1 .67-.223L8 9.44l5.776-2.888a.5.5 0 1 1 .448.894l-6 3a.5.5 0 0 1-.448 0l-6-3a.5.5 0 0 1-.223-.67z"
+            />
+          </svg>
+        </div>
+      </div>
+      <hr />
+    </div>
+    <div class="footer p-3 mt-3">
+      <p style="font-size: 2rem; color: #8a8a9c">SCMC CALL CENTER</p>
+      <div class="footer telnumber">02 116 4213</div>
+      <div class="footer telnumber">02 026 6953</div>
+      <hr class="footer hr" />
+      <div class="d-flex justify-content-between pe-5">
+        <div class="footer footermenu">ผลิตภัณฑ์ทั้งหมด</div>
+        <div class="footer footermenu">+</div>
+      </div>
+      <hr class="footer hr" />
+      <div class="d-flex justify-content-between pe-5">
+        <div class="footer footermenu">เกี่ยวกับเรา</div>
+        <div class="footer footermenu">+</div>
+      </div>
+      <hr class="footer hr" />
+      <div class="d-flex justify-content-between pe-5">
+        <div class="footer footermenu">บริการลูกค้า</div>
+        <div class="footer footermenu">+</div>
+      </div>
+      <hr class="footer hr" />
+      <div class="d-flex justify-content-between pe-5">
+        <div class="footer footermenu">สิทธิพิเศษ</div>
+        <div class="footer footermenu">+</div>
+      </div>
+      <hr class="footer hr" />
+      <div class="d-flex justify-content-between pe-5">
+        <div class="footer footermenu">ติดต่อเรา</div>
+      </div>
+      <hr class="footer hr" />
+      <p class="" style="font-size: 1.2rem; color: #b5b5cc; text-align: center">
+        © Copyright 2023 SCM C Technologies Company Limited. All rights
+        reserved.
+      </p>
+    </div>
+
+    <button
+      id="popupButton"
+      class="btn btn-primary rounded-circle p-4"
+      style="position: fixed; bottom: 10px; right: 10px"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="40"
+        height="40"
+        fill="currentColor"
+        class="bi bi-telephone-fill m-0 p-0"
+        viewBox="0 0 16 16"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M1.885.511a1.745 1.745 0 0 1 2.61.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.678.678 0 0 0 .178.643l2.457 2.457a.678.678 0 0 0 .644.178l2.189-.547a1.745 1.745 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.634 18.634 0 0 1-7.01-4.42 18.634 18.634 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877L1.885.511z"
+        />
+      </svg>
+    </button>
+
+    <!-- Modal Container incoming call-->
+    <div id="incoming-call" class="hide modal_incomingcall">
+      <div class="modal_incomingcall-content rounded-3">
+        <div class="d-flex justify-content-between w-100 mt-3 fs-1 fw-bold">
+          <div class="">Incoming call</div>
+          <div class="pe-3" id="closeButton-incomingcall">X</div>
+        </div>
+        <hr />
+        <div class="w-100 mt-5" id="buttonincomingcallcontainner">
+          <div class="pb-0 text-center fw-bold" style="font-size: 2.7rem">
+            มีสายเรียกเข้าจาก agent
+          </div>
+          <div class="row mx-3 mt-5" style="margin-top: 4rem">
+            <div
+              id="button-reject-incoming"
+              class="btn col-5 p-3 fs-1 fw-vold"
+              style="background-color: #8a8a9c; color: #fff"
+            >
+              Cancel
+            </div>
+            <div class="col-1"></div>
+            <div id="button-accept-incoming" class="col-6 btn btn-primary p-4">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="40"
+                height="40"
+                fill="currentColor"
+                class="bi bi-telephone-fill m-0 p-0"
+                viewBox="0 0 16 16"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M1.885.511a1.745 1.745 0 0 1 2.61.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.678.678 0 0 0 .178.643l2.457 2.457a.678.678 0 0 0 .644.178l2.189-.547a1.745 1.745 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.634 18.634 0 0 1-7.01-4.42 18.634 18.634 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877L1.885.511z"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-3 w-100">
+          <div
+            id="incomingCallAcceptControler"
+            class="hide row mt-3 text-center"
+          >
+            <div class="col-12 mt-4" style="font-size: 3rem">
+              ระยะเวลาการสนทนา
+            </div>
+            <div
+              id="call-timer-incomingcall"
+              class="fw-bold col-12"
+              style="font-size: 3.2rem"
+            >
+              Starting call....
+            </div>
+            <div class=""></div>
+            <div class="col-12 m-0 d-flex justify-content-center">
+              <div class="col-3"></div>
+              <div
+                id="button-hangup-incoming"
+                class="hide btn btn-danger col-6 p-4 mt-4"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="45"
+                  height="45"
+                  fill="currentColor"
+                  class="bi bi-telephone-fill m-0 p-0"
+                  viewBox="0 0 16 16"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M1.885.511a1.745 1.745 0 0 1 2.61.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.678.678 0 0 0 .178.643l2.457 2.457a.678.678 0 0 0 .644.178l2.189-.547a1.745 1.745 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.634 18.634 0 0 1-7.01-4.42 18.634 18.634 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877L1.885.511zm9.261 1.135a.5.5 0 0 1 .708 0L13 2.793l1.146-1.147a.5.5 0 0 1 .708.708L13.707 3.5l1.147 1.146a.5.5 0 0 1-.708.708L13 4.207l-1.146 1.147a.5.5 0 0 1-.708-.708L12.293 3.5l-1.147-1.146a.5.5 0 0 1 0-.708z"
+                  />
+                </svg>
+              </div>
+              <div class="col-3"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal -->
+        <div
+          class="modal fade"
+          id="deviceModal"
+          tabindex="-1"
+          role="dialog"
+          aria-labelledby="deviceModalLabel"
+          aria-hidden="true"
+        >
+          <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="deviceModalLabel">
+                  Device Information
+                </h5>
+                <button
+                  type="button"
+                  class="close"
+                  data-dismiss="modal"
+                  aria-label="Close"
+                >
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <label>Ringtone Devices</label>
+                <select id="ringtone-devices" class="form-control"></select>
+                <label>Speaker Devices</label>
+                <select id="speaker-devices" class="form-control"></select>
+              </div>
+              <div class="modal-footer">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  data-dismiss="modal"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="popup" class="modal">
+      <div class="modal-content rounded-3">
+        <div class="d-flex justify-content-between w-100 mt-3 fs-1 fw-bold">
+          <div class="">Click to Call</div>
+          <div class="pe-3" id="closeButton">X</div>
+        </div>
+        <hr />
+        <div class="w-100 mt-5" id="buttoncallcontainner">
+          <div class="text-center" style="font-size: 2.7rem">
+            ต้องการเริ่มต้นการสนทนาหรือไม่
+          </div>
+          <div class="row mx-3" style="margin-top: 2rem">
+            <div
+              id="cancelBtn"
+              class="btn col-5 p-3 fs-1 fw-vold"
+              style="background-color: #8a8a9c; color: #fff"
+            >
+              Cancel
+            </div>
+            <div class="col-1"></div>
+            <div id="startcall" class="col-6 btn btn-primary p-4">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="40"
+                height="40"
+                fill="currentColor"
+                class="bi bi-telephone-fill m-0 p-0"
+                viewBox="0 0 16 16"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M1.885.511a1.745 1.745 0 0 1 2.61.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.678.678 0 0 0 .178.643l2.457 2.457a.678.678 0 0 0 .644.178l2.189-.547a1.745 1.745 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.634 18.634 0 0 1-7.01-4.42 18.634 18.634 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877L1.885.511z"
+                />
+              </svg>
+            </div>
+          </div>
+          <div id="error" class="hide mt-5 fs-1 text-center" style="color: red">
+            กรุณาระบุ หมายเลขโทรศัพท์ หรือ รหัสลูกค้า
+          </div>
+        </div>
+
+        <div class="mb-3 w-100">
+          <div id="numpad" class="hide row mt-3 text-center">
+            <div class="col-12" style="font-size: 3rem">
+              หมายเลขผู้ใช้บริการ
+            </div>
+            <div
+              id="custumerId"
+              class="col-12 fw-bold"
+              style="font-size: 3.2rem"
+            >
+              0000
+            </div>
+            <div class="col-12 mt-4" style="font-size: 3rem">
+              ระยะเวลาการสนทนา
+            </div>
+            <div
+              id="call-timer"
+              class="fw-bold col-12"
+              style="font-size: 3.2rem"
+            >
+              Starting call....
+            </div>
+            <div class=""></div>
+            <div class="col-12 m-0 d-flex justify-content-center">
+              <div class="col-3"></div>
+              <div
+                id="button-hangup-outgoing"
+                class="hide btn btn-danger col-6 p-4 mt-4"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="45"
+                  height="45"
+                  fill="currentColor"
+                  class="bi bi-telephone-fill m-0 p-0"
+                  viewBox="0 0 16 16"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M1.885.511a1.745 1.745 0 0 1 2.61.163L6.29 2.98c.329.423.445.974.315 1.494l-.547 2.19a.678.678 0 0 0 .178.643l2.457 2.457a.678.678 0 0 0 .644.178l2.189-.547a1.745 1.745 0 0 1 1.494.315l2.306 1.794c.829.645.905 1.87.163 2.611l-1.034 1.034c-.74.74-1.846 1.065-2.877.702a18.634 18.634 0 0 1-7.01-4.42 18.634 18.634 0 0 1-4.42-7.009c-.362-1.03-.037-2.137.703-2.877L1.885.511zm9.261 1.135a.5.5 0 0 1 .708 0L13 2.793l1.146-1.147a.5.5 0 0 1 .708.708L13.707 3.5l1.147 1.146a.5.5 0 0 1-.708.708L13 4.207l-1.146 1.147a.5.5 0 0 1-.708-.708L12.293 3.5l-1.147-1.146a.5.5 0 0 1 0-.708z"
+                  />
+                </svg>
+              </div>
+              <div class="col-3"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal -->
+        <div
+          class="modal fade"
+          id="deviceModal"
+          tabindex="-1"
+          role="dialog"
+          aria-labelledby="deviceModalLabel"
+          aria-hidden="true"
+        >
+          <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="deviceModalLabel">
+                  Device Information
+                </h5>
+                <button
+                  type="button"
+                  class="close"
+                  data-dismiss="modal"
+                  aria-label="Close"
+                >
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <label>Ringtone Devices</label>
+                <select id="ringtone-devices" class="form-control"></select>
+                <label>Speaker Devices</label>
+                <select id="speaker-devices" class="form-control"></select>
+              </div>
+              <div class="modal-footer">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  data-dismiss="modal"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/buffer/6.0.3/buffer.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="twilio.min.js"></script>
     <script src="quickstart.js"></script>
+    <script>
+      // JavaScript to handle the pop-up functionality
+    </script>
   </body>
 </html>
